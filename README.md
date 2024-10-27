@@ -1,6 +1,6 @@
 # QuickTTS
 
-Download: Just download the DIST folder and run quick_tts.exe
+Download: Just download everything and then go into the DIST folder and run quick_tts.exe
 
 QuickTTS: This is a text to speech app.
 
