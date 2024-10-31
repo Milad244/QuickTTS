@@ -7,7 +7,6 @@ import os
 
 class TTS:
     def __init__(self):
-        # setting up text to speech
         pygame.mixer.init()
         self.tts_engine = pyttsx3.init()
         self.default_settings()
@@ -17,6 +16,12 @@ class TTS:
         self.set_volume(1)
         self.set_voices(0)
         self.set_rate(150)
+
+    def save_settings(self):
+        self.get_volume()
+        self.get_voice_index()
+        self.get_rate()
+        # Working on this
 
     def set_volume(self, volume):
         pygame.mixer.music.set_volume(volume)
@@ -58,18 +63,19 @@ class TTS:
         self.tts_engine.runAndWait()
 
     def play_audio(self):
-        print(self.audio_file)
         if os.path.exists(self.audio_file):
             pygame.mixer.music.load(self.audio_file)
             pygame.mixer.music.play()
 
-    def get_text_to_speak(self, text_input, status_label):
+    def is_audio_playing(self):
+        return pygame.mixer.music.get_busy()
+
+    def get_text_to_speak(self, text_input):
         text = text_input.get("1.0", tk.END).strip()
-        if text:
+        if text and text != "Enter text here...":
             self.stop_audio()
             self.save_speech(text)
             self.play_audio()
-            status_label.config(text="Playing...")
 
     def stop_audio(self):
         pygame.mixer.music.stop()
@@ -78,12 +84,14 @@ class TTS:
         pygame.mixer.music.pause()
 
     def resume_audio(self):
-         pygame.mixer.music.unpause()
+        pygame.mixer.music.unpause()
 
 
 class TTS_GUI():
     def __init__(self):
         self.tts = TTS()
+        self.is_playing = False
+        self.is_paused = False
         self.init_tkinter()
 
     def init_tkinter(self):
@@ -97,48 +105,71 @@ class TTS_GUI():
         title.grid(row=0, column=0, columnspan=2, pady=(20, 10), sticky="n")
 
         # Text Input
+        def add_placeholder(event=None):
+            if text_input.get("1.0", "end-1c") == "":
+                text_input.insert("1.0", placeholder_text)
+                text_input.config(fg="grey")
+
+        def remove_placeholder(event=None):
+            if text_input.get("1.0", "end-1c") == placeholder_text:
+                text_input.delete("1.0", "end")
+                text_input.config(fg="black")
+
+        placeholder_text = "Enter text here..."
+
         text_input = tk.Text(root, font=('Segoe UI', 15), wrap=tk.WORD)
         text_input.grid(row=1, column=0, columnspan=2, padx=20, pady=(10, 20), sticky="nsew")
 
-        # TTS Status Label
-        status_label = tk.Label(root, text="Ready", font=('Segoe UI', 15))
-        status_label.grid(row=2, column=0, columnspan=2, pady=10, sticky="n")
+        text_input.insert("1.0", placeholder_text)
+        text_input.config(fg="grey")
 
-        # Speak Button
-        speak_button = tk.Button(
+        text_input.bind("<FocusIn>", remove_placeholder)
+        text_input.bind("<FocusOut>", add_placeholder)
+
+        # Play/Stop Button
+        def toggle_play_stop():
+            if not self.is_playing:
+                self.is_playing = True
+                self.is_paused = False
+                play_stop_button.config(text="Stop")
+                pause_resume_button.config(state="normal", text="Pause")
+                self.tts.get_text_to_speak(text_input)
+                check_audio_status()
+            else:
+                self.is_playing = False
+                play_stop_button.config(text="Play")
+                pause_resume_button.config(state="normal", text="Pause")
+                pause_resume_button.config(state="disabled")
+                self.tts.stop_audio()
+
+        play_stop_button = tk.Button(
             root,
             font=('Segoe UI', 15),
-            text="Speak",
-            command=lambda: self.tts.get_text_to_speak(text_input, status_label)
+            text="Play",
+            command=toggle_play_stop
         )
-        speak_button.grid(row=3, column=0, padx=20, pady=5, sticky="e")
+        play_stop_button.grid(row=3, column=0, padx=20, pady=5, sticky="e")
 
-        # Stop Button
-        stop_button = tk.Button(
-            root,
-            font=('Segoe UI', 15),
-            text="Stop",
-            command=lambda: self.tts.stop_audio()
-        )
-        stop_button.grid(row=3, column=1, padx=20, pady=5, sticky="w")
+        # Pause/Resume Button
+        def toggle_pause_resume():
+            if self.is_playing:
+                if not self.is_paused:
+                    self.is_paused = True
+                    pause_resume_button.config(text="Resume")
+                    self.tts.pause_audio()
+                else:
+                    self.is_paused = False
+                    pause_resume_button.config(text="Pause")
+                    self.tts.resume_audio()
 
-        # Pause Button
-        pause_button = tk.Button(
+        pause_resume_button = tk.Button(
             root,
             font=('Segoe UI', 15),
             text="Pause",
-            command=lambda: self.tts.pause_audio()
+            command=toggle_pause_resume,
+            state="disabled"
         )
-        pause_button.grid(row=4, column=0, padx=20, pady=5, sticky="e")
-
-        # Resume Button
-        resume_button = tk.Button(
-            root,
-            font=('Segoe UI', 15),
-            text="Resume",
-            command=lambda: self.tts.resume_audio()
-        )
-        resume_button.grid(row=4, column=1, padx=20, pady=5, sticky="w")
+        pause_resume_button.grid(row=3, column=1, padx=20, pady=5, sticky="w")
 
         # Volume Slider
         volume_slider = tk.Scale(
@@ -177,6 +208,16 @@ class TTS_GUI():
         root.grid_rowconfigure(1, weight=1)
         root.grid_columnconfigure(0, weight=1)
         root.grid_columnconfigure(1, weight=1)
+
+        def check_audio_status():
+            if self.tts.is_audio_playing() or self.is_paused:
+                root.after(100, check_audio_status)
+            else:
+                self.is_playing = False
+                play_stop_button.config(text="Play")
+                pause_resume_button.config(state="disabled")
+
+        check_audio_status()
 
         # Running the GUI
         root.mainloop()

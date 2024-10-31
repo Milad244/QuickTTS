@@ -1,11 +1,13 @@
 # Progress Tracker
 
 ## Short-Term Tasks
-- [ ] Task: Make progress text accurate
+- [ ] Task: Save volume, voice, rate in config file
+- [ ] Task: Make the app not so ugly
 
 ## Long-Term Tasks
 - [ ] Task: Add a section where you can see your previous TTS
-- [ ] Task: Make the app not so ugly
 
 ## Completed Tasks
 - [x] Task: I just spent so many hours straight creating a starting version for GitHub. It was a pain but I got it done.
+- [x] Task: Merge playback buttons
+- [x] Task: Make a build script
