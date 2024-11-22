@@ -1,7 +1,7 @@
 # QuickTTS
 
-Download: Just download everything and then go into the DIST folder and run quick_tts.exe
+## Description
+**QuickTTS**: QuickTTS is a text to speech app. You can adjust the volume, speed, and voice of your TTS!
 
-QuickTTS: This is a text to speech app.
-
-Tools used for this project: Python
+## Tools Used
+- Python

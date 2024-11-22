@@ -3,13 +3,13 @@ import shutil
 import subprocess
 
 download_folder = 'C:\\All Milad Coding\\Pycharm\\Python Projects\\QuickTTS\\download'
-script_filename = 'quick_tts.py'
+script_filename = 'quick_tts.pyw'
 
 
 def clean_download_folder():
     if os.path.exists(download_folder):
         for item in os.listdir(download_folder):
-            if item == ".git":
+            if item in [".git", ".idea"]:
                 continue
             item_path = os.path.join(download_folder, item)
             if os.path.isdir(item_path):
